@@ -2,10 +2,12 @@ import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 
-import { graphqlIoTCore } from './functions/graphqlIoTCore/resource';
+import { graphqlIoTCoreTelemetry } from './functions/graphqlIoTCoreTelemetry/resource';
+import { graphqlIoTCoreStatus } from './functions/graphqlIoTCoreStatus/resource';
 
 const backend = defineBackend({
   auth,
   data,
-  graphqlIoTCore,
+  graphqlIoTCoreTelemetry,
+  graphqlIoTCoreStatus,
 });
