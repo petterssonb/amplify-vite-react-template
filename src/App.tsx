@@ -120,7 +120,7 @@ function App() {
           >
             <View padding="xs">
               <Flex>
-                Last Seen:
+                Last Seen: 
                 {moment(telemetries[telemetries.length - 1]?.timestamp).fromNow()}
               </Flex>
               <Flex>

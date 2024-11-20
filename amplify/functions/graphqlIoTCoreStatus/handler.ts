@@ -29,7 +29,7 @@ export const handler: Handler = async (event, context) => {
             query: `mutation MyMutation {
                     createTelemetry(input: {
                         device_id: "${event.device_id}", 
-                        status: ${event.eventType}
+                        status: "${event.eventType}"
                         }) 
                     {
                         device_id
