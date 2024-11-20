@@ -10,15 +10,37 @@ import {
   Divider,
   Flex,
   Heading,
-  Table,
-  TableCell,
-  TableBody,
-  TableHead,
-  TableRow,
+  //Table,
+  //TableCell,
+  //TableBody,
+  //TableHead,
+  //TableRow,
   useAuthenticator,
   View
 } from '@aws-amplify/ui-react';
 import moment from "moment";
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const client = generateClient<Schema>();
 
@@ -34,12 +56,8 @@ function App() {
     });
 
     client.models.devices.observeQuery().subscribe({
-      next: (data) => { setDevices([...data.items]), console.log("devices updated") },
+      next: (data) => { setDevices([...data.items]) },
     });
-
-    client.models.devices.onUpdate().subscribe({
-      next: (data) => { console.log("devices updateddd", data) }
-    })
 
   }, []);
 
@@ -52,6 +70,7 @@ function App() {
   function deleteDevice(device_id: string) {
     client.models.devices.delete({ device_id })
   }
+
 
   function deleteTelemetry(device_id: string, timestamp: number) {
     client.models.telemetry.delete({ device_id, timestamp })
@@ -70,9 +89,70 @@ function App() {
     });
   }
 
+  const chartOptions = {
+
+    onClick: function (evt: any, element: string | any[]) {
+      if (element.length > 0) {
+        var ind = element[0].index;
+        deleteTelemetry(telemetries[ind].device_id, telemetries[ind].timestamp)
+      }
+    },
+
+    responsive: true,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
+    stacked: false,
+    plugins: {
+      title: {
+        display: true,
+        text: telemetries[0]?.device_id ? telemetries[0].device_id : "",
+      },
+    },
+    scales: {
+      y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+      }
+    },
+  };
+
+
+  const cartData = {
+    labels: telemetries.map((data) => {
+      return moment(data?.timestamp).format("HH:mm:ss");
+    }),
+    datasets: [
+      {
+        label: 'Temperature',
+        data: telemetries.map((data) => {
+          return data?.temperature;
+        }),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        yAxisID: 'y',
+      },
+      {
+        label: 'Humidity',
+        data: telemetries.map((data) => {
+          return data?.humidity;
+        }),
+        borderColor: 'rgb(99, 255, 132)',
+        backgroundColor: 'rgba(99, 255, 132, 0.5)',
+        yAxisID: 'y1',
+      }
+    ],
+  };
+
   return (
     <main>
-
       <Heading
         width='30vw'
         level={5} >
@@ -87,11 +167,6 @@ function App() {
         width='30vw'
         level={5} >
         Humidity: {telemetries[telemetries.length - 1]?.humidity}
-      </Heading>
-      <Heading
-        width='30vw'
-        level={5} >
-        Updated: {moment(telemetries[telemetries.length - 1]?.timestamp).fromNow()}
       </Heading>
 
 
@@ -124,13 +199,12 @@ function App() {
           >
             <View padding="xs">
               <Flex>
-                Last Seen:
-                {moment(telemetries[telemetries.length - 1]?.timestamp).fromNow()}
+                Last Seen: {telemetries[telemetries.length - 1]?.timestamp ? moment(telemetries[telemetries.length - 1].timestamp).fromNow() : ""}
               </Flex>
               <Flex>
                 Status:
-                <Badge variation="success" key={item.device_id}>
-                  {item?.status}
+                <Badge variation={(item?.status == "connected") ? "success" : "error"} key={item.device_id}>
+                  {item?.status ? item?.status.charAt(0).toUpperCase() + String(item?.status).slice(1) : ""}
                 </Badge>
               </Flex>
               <Divider padding="xs" />
@@ -155,6 +229,7 @@ function App() {
         </Button>
       }
 
+      {/*
       <Table
         caption="Telemetries"
         highlightOnHover={true}
@@ -186,6 +261,9 @@ function App() {
           ))}
         </TableBody>
       </Table>
+      */}
+
+      <Line options={chartOptions} data={cartData}></Line>
 
       <Divider padding="xs" />
       <button onClick={signOut}>Sign out</button>
