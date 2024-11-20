@@ -34,6 +34,9 @@ export const handler: Handler = async (event, context) => {
                     {
                         device_id
                         status
+                        owner
+                        createdAt
+                        updatedAt
                     }
                 }
                 `})
