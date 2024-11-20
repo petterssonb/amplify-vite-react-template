@@ -34,8 +34,12 @@ function App() {
     });
 
     client.models.devices.observeQuery().subscribe({
-      next: (data) => { setDevices([...data.items]) },
+      next: (data) => { setDevices([...data.items]), console.log("devices updated") },
     });
+
+    client.models.devices.onUpdate().subscribe({
+      next: (data) => { console.log("devices updateddd", data) }
+    })
 
   }, []);
 
@@ -120,7 +124,7 @@ function App() {
           >
             <View padding="xs">
               <Flex>
-                Last Seen: 
+                Last Seen:
                 {moment(telemetries[telemetries.length - 1]?.timestamp).fromNow()}
               </Flex>
               <Flex>
