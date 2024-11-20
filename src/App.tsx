@@ -77,12 +77,12 @@ function App() {
       <Heading
         width='30vw'
         level={5} >
-        Temperature: {telemetries[telemetries.length - 1]?.temperature} 
+        Temperature: {telemetries[telemetries.length - 1]?.temperature}
       </Heading>
       <Heading
         width='30vw'
         level={5} >
-        Humidity: {telemetries[telemetries.length - 1]?.humidity} 
+        Humidity: {telemetries[telemetries.length - 1]?.humidity}
       </Heading>
       <Heading
         width='30vw'
@@ -121,7 +121,7 @@ function App() {
             <View padding="xs">
               <Flex>
                 Last Seen:
-                {item?.last_seen}
+                {moment(telemetries[telemetries.length - 1]?.timestamp).fromNow()}
               </Flex>
               <Flex>
                 Status:

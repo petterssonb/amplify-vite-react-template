@@ -39,7 +39,7 @@ const schema = a.schema({
     .model({
       device_id: a.string().required(),
       owner: a.string().required(),
-      last_seen: a.timestamp(),
+      //last_seen: a.timestamp(),
       status: a.string(),
     })
     .identifier(['device_id'])
