@@ -126,7 +126,7 @@ function App() {
               <Flex>
                 Status:
                 <Badge variation="success" key={item.device_id}>
-                  {item?.online}
+                  {item?.status}
                 </Badge>
               </Flex>
               <Divider padding="xs" />
