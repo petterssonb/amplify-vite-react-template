@@ -27,7 +27,7 @@ export const handler: Handler = async (event, context) => {
         headers: headers,
         body: JSON.stringify({
             query: `mutation MyMutation {
-                    createTelemetry(input: {
+                    updateDevices(input: {
                         device_id: "${event.device_id}", 
                         status: "${event.eventType}"
                         }) 
