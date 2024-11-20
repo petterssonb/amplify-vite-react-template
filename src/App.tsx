@@ -51,16 +51,17 @@ function App() {
   const { user, signOut } = useAuthenticator();
 
   useEffect(() => {
-    client.models.telemetry.observeQuery().subscribe({
+    client.models.telemetry.observeQuery({}).subscribe({
       next: (data) => { setTelemetry([...data.items]) },
-    });
-
-    client.models.devices.observeQuery().subscribe({
-      next: (data) => { setDevices([...data.items]) },
     });
 
   }, []);
 
+  useEffect(() => {
+    client.models.devices.observeQuery().subscribe({
+      next: (data) => { setDevices([...data.items]) },
+    });
+  }, []);
 
   function createDevice() {
     const device = String(window.prompt("Device ID"));
@@ -70,7 +71,6 @@ function App() {
   function deleteDevice(device_id: string) {
     client.models.devices.delete({ device_id })
   }
-
 
   function deleteTelemetry(device_id: string, timestamp: number) {
     client.models.telemetry.delete({ device_id, timestamp })
@@ -201,6 +201,7 @@ function App() {
             <View padding="xs">
               <Flex>
                 Last Seen: {telemetries[telemetries.length - 1]?.timestamp ? moment(telemetries[telemetries.length - 1].timestamp).fromNow() : ""}
+
               </Flex>
               <Flex>
                 Status:
