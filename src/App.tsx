@@ -63,6 +63,34 @@ function App() {
     });
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+
+      devices.forEach((device) => {
+        const lastTelemetry = telemetries
+          .filter((tel) => tel.device_id === device.device_id)
+          .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+        if (lastTelemetry) {
+          const timeDiff = now - lastTelemetry.timestamp;
+
+          const newStatus = timeDiff > 65000 ? "offline" : "online";
+
+          if (device.status !== newStatus) {
+            client.models.devices.update({
+              device_id: device.device_id,
+              status: newStatus,
+              owner: user.userId,
+            });
+          }
+        }
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [devices, telemetries]);
+
   function createDevice() {
     const device = String(window.prompt("Device ID"));
     client.models.devices.create({ device_id: device, owner: user.userId })
@@ -205,7 +233,7 @@ function App() {
               </Flex>
               <Flex>
                 Status:
-                <Badge variation={(item?.status == "connected") ? "success" : "error"} key={item.device_id}>
+                <Badge variation={(item?.status == "online") ? "success" : "error"} key={item.device_id}>
                   {item?.status ? item?.status.charAt(0).toUpperCase() + String(item?.status).slice(1) : ""}
                 </Badge>
               </Flex>
