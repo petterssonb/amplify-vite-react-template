@@ -10,13 +10,10 @@ import {
   Divider,
   Flex,
   Heading,
-  //Table,
-  //TableCell,
-  //TableBody,
-  //TableHead,
-  //TableRow,
   useAuthenticator,
-  View
+  View,
+  ThemeProvider,
+  defaultTheme
 } from '@aws-amplify/ui-react';
 import moment from "moment";
 
@@ -104,19 +101,6 @@ function App() {
     client.models.telemetry.delete({ device_id, timestamp })
   }
 
-  function createTelemetry() {
-    const temperature = Math.random() * (30 - 20) + 20;
-    const humidity = Math.random() * (90 - 40) + 40;
-
-    client.models.telemetry.create({
-      device_id: "1234",
-      timestamp: new Date().getTime(),
-      temperature: temperature,
-      humidity: humidity,
-      owner: user.userId,
-    });
-  }
-
   const chartOptions = {
 
     onClick: function (evt: any, element: string | any[]) {
@@ -153,6 +137,26 @@ function App() {
     },
   };
 
+  const customTheme = {
+    ...defaultTheme,
+    name: 'custom-theme',
+    tokens: {
+      components: {
+        button: {
+          primary: {
+            backgroundColor: { value: 'purple' },
+            color: { value: 'white' },
+            _hover: {
+              backgroundColor: { value: 'darkviolet' },
+            },
+            fontSize: { value: '1rem' },
+            padding: { value: '0.75rem 1.5rem' },
+          },
+        },
+      },
+    },
+  };
+
 
   const cartData = {
     labels: telemetries.map((data) => {
@@ -164,8 +168,8 @@ function App() {
         data: telemetries.map((data) => {
           return data?.temperature;
         }),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        borderColor: 'rgba(128, 0, 128, 1)',
+        backgroundColor: 'rgba(128, 0, 128, 0.5)',
         yAxisID: 'y',
       },
       {
@@ -173,8 +177,8 @@ function App() {
         data: telemetries.map((data) => {
           return data?.humidity;
         }),
-        borderColor: 'rgb(99, 255, 132)',
-        backgroundColor: 'rgba(99, 255, 132, 0.5)',
+        borderColor: 'rgba(75, 0, 130, 1)',
+        backgroundColor: 'rgba(75, 0, 130, 0.5)',
         yAxisID: 'y1',
       }
     ],
@@ -202,6 +206,7 @@ function App() {
       <Divider padding="xs" />
       <h3>Devices</h3>
       {
+        <ThemeProvider theme={customTheme}>
         <Button
           variation="primary"
           loadingText=""
@@ -209,6 +214,7 @@ function App() {
         >
           Add Device
         </Button>
+      </ThemeProvider>
       }
       <Divider padding="xs" />
 
@@ -249,54 +255,30 @@ function App() {
 
       <Divider padding="xs" />
       <h3>Telemetry</h3>
-      {
-        <Button
-          variation="primary"
-          loadingText=""
-          onClick={createTelemetry}
-        >
-          Create new Telemetry record
-        </Button>
-      }
-
-      {/*
-      <Table
-        caption="Telemetries"
-        highlightOnHover={true}
-        variation="striped">
-        <TableHead>
-          <TableRow>
-            <TableCell as="th">Device ID</TableCell>
-            <TableCell as="th">Temperature</TableCell>
-            <TableCell as="th">Humidity</TableCell>
-            <TableCell as="th">Delete</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {telemetries.map((tel, index) => (
-            <TableRow key={index}>
-              <TableCell>{tel.device_id}</TableCell>
-              <TableCell>{tel?.temperature}</TableCell>
-              <TableCell>{tel?.humidity}</TableCell>
-              <TableCell>
-                <Button
-                  variation="primary"
-                  colorTheme="error"
-                  onClick={() => deleteTelemetry(tel.device_id, tel.timestamp)}
-                >
-                  Delete
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      */}
 
       <Line options={chartOptions} data={cartData}></Line>
 
       <Divider padding="xs" />
-      <button onClick={signOut}>Sign out</button>
+      <button
+      onClick={signOut}
+      style={{
+        backgroundColor: 'black',
+        color: 'white',
+        padding: '10px 20px',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s ease',
+      }}
+      onMouseEnter={(e) => {
+        (e.target as HTMLButtonElement).style.backgroundColor = 'purple';
+      }}
+      onMouseLeave={(e) => {
+        (e.target as HTMLButtonElement).style.backgroundColor = 'black';
+      }}
+    >
+      Sign out
+    </button>
     </main >
   );
 }
