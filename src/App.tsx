@@ -44,8 +44,17 @@ const client = generateClient<Schema>();
 function App() {
   const [telemetries, setTelemetry] = useState<Array<Schema["telemetry"]["type"]>>([]);
   const [devices, setDevices] = useState<Array<Schema["devices"]["type"]>>([]);
+  const [selectedDevice, setSelectedDevice] = useState<string>("");
 
   const { user, signOut } = useAuthenticator();
+
+  const handleDeviceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedDevice(event.target.value);
+  };
+
+  const filteredTelemetries = telemetries.filter(
+    (data) => data.device_id === selectedDevice
+  );
 
   useEffect(() => {
     client.models.telemetry.observeQuery({}).subscribe({
@@ -159,54 +168,66 @@ function App() {
 
 
   const cartData = {
-    labels: telemetries.map((data) => {
-      return moment(data?.timestamp).format("HH:mm:ss");
-    }),
+    labels: filteredTelemetries.map((data) =>
+      moment(data?.timestamp).format("HH:mm:ss")
+    ),
     datasets: [
       {
-        label: 'Temperature',
-        data: telemetries.map((data) => {
-          return data?.temperature;
-        }),
-        borderColor: 'rgba(128, 0, 128, 1)',
-        backgroundColor: 'rgba(128, 0, 128, 0.5)',
-        yAxisID: 'y',
+        label: "Temperature",
+        data: filteredTelemetries.map((data) => data?.temperature),
+        borderColor: "rgba(128, 0, 128, 1)",
+        backgroundColor: "rgba(128, 0, 128, 0.5)",
+        yAxisID: "y",
       },
       {
-        label: 'Humidity',
-        data: telemetries.map((data) => {
-          return data?.humidity;
-        }),
-        borderColor: 'rgba(75, 0, 130, 1)',
-        backgroundColor: 'rgba(75, 0, 130, 0.5)',
-        yAxisID: 'y1',
-      }
+        label: "Humidity",
+        data: filteredTelemetries.map((data) => data?.humidity),
+        borderColor: "rgba(75, 0, 130, 1)",
+        backgroundColor: "rgba(75, 0, 130, 0.5)",
+        yAxisID: "y1",
+      },
     ],
   };
 
   return (
     <main>
       <Heading
-        width='30vw'
-        level={5} >
+        width="30vw"
+        level={5}
+      >
         User: {user?.signInDetails?.loginId}
       </Heading>
       <Heading
-        width='30vw'
-        level={5} >
+        width="30vw"
+        level={5}
+      >
         Temperature: {telemetries[telemetries.length - 1]?.temperature}
       </Heading>
       <Heading
-        width='30vw'
-        level={5} >
+        width="30vw"
+        level={5}
+      >
         Humidity: {telemetries[telemetries.length - 1]?.humidity}
       </Heading>
-
-
+  
       <Divider padding="xs" />
+      <h3>Select Device</h3>
+      <select
+        onChange={handleDeviceChange}
+        value={selectedDevice}
+      >
+        <option value="">-- Select a Device --</option>
+        {devices.map((device) => (
+          <option key={device.device_id} value={device.device_id}>
+            {device.device_id}
+          </option>
+        ))}
+      </select>
+      
+      <Divider padding="xs" />
+      
       <h3>Devices</h3>
-      {
-        <ThemeProvider theme={customTheme}>
+      <ThemeProvider theme={customTheme}>
         <Button
           variation="primary"
           loadingText=""
@@ -215,72 +236,86 @@ function App() {
           Add Device
         </Button>
       </ThemeProvider>
-      }
+      
       <Divider padding="xs" />
-
+  
       <Collection
-        items={devices}
-        type="list"
-        direction="row"
-        gap="20px"
-        wrap="nowrap"
-      >
-        {(item, index) => (
-          <Card
-            key={index}
-            borderRadius="medium"
-            maxWidth="20rem"
-            variation="outlined"
-          >
-            <View padding="xs">
-              <Flex>
-                Last Seen: {telemetries[telemetries.length - 1]?.timestamp ? moment(telemetries[telemetries.length - 1].timestamp).fromNow() : ""}
-
-              </Flex>
-              <Flex>
-                Status:
-                <Badge variation={(item?.status == "online") ? "success" : "error"} key={item.device_id}>
-                  {item?.status ? item?.status.charAt(0).toUpperCase() + String(item?.status).slice(1) : ""}
-                </Badge>
-              </Flex>
-              <Divider padding="xs" />
-              <Heading padding="medium">ID: {item.device_id}</Heading>
-              <Button variation="destructive" isFullWidth onClick={() => deleteDevice(item.device_id)}>
-                Delete
-              </Button>
-            </View>
-          </Card>
-        )}
-      </Collection>
-
+      items={devices}
+      type="list"
+      direction="row"
+      gap="20px"
+      wrap="nowrap"
+    >
+      {(item, index) => (
+        <Card
+          key={index}
+          borderRadius="medium"
+          maxWidth="20rem"
+          variation="outlined"
+        >
+          <View padding="xs">
+            <Flex>
+              Last Seen:{" "}
+              {telemetries
+                .filter((tel) => tel.device_id === item.device_id)
+                .sort((a, b) => b.timestamp - a.timestamp)[0]?.timestamp
+                ? moment(
+                    telemetries
+                      .filter((tel) => tel.device_id === item.device_id)
+                      .sort((a, b) => b.timestamp - a.timestamp)[0].timestamp
+                  ).fromNow()
+                : "No data"}
+            </Flex>
+            <Flex>
+              Status:
+              <Badge
+                variation={item.status === "online" ? "success" : "error"}
+              >
+                {item.status
+                  ? item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                  : "Unknown"}
+              </Badge>
+            </Flex>
+            <Divider padding="xs" />
+            <Heading padding="medium">ID: {item.device_id}</Heading>
+            <Button
+              variation="destructive"
+              isFullWidth
+              onClick={() => deleteDevice(item.device_id)}
+            >
+              Delete
+            </Button>
+          </View>
+        </Card>
+      )}
+    </Collection>
+  
       <Divider padding="xs" />
       <h3>Telemetry</h3>
-
       <Line options={chartOptions} data={cartData}></Line>
-
+  
       <Divider padding="xs" />
       <button
-      onClick={signOut}
-      style={{
-        backgroundColor: 'black',
-        color: 'white',
-        padding: '10px 20px',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        transition: 'background-color 0.3s ease',
-      }}
-      onMouseEnter={(e) => {
-        (e.target as HTMLButtonElement).style.backgroundColor = 'purple';
-      }}
-      onMouseLeave={(e) => {
-        (e.target as HTMLButtonElement).style.backgroundColor = 'black';
-      }}
-    >
-      Sign out
-    </button>
-    </main >
-  );
-}
+        onClick={signOut}
+        style={{
+          backgroundColor: "black",
+          color: "white",
+          padding: "10px 20px",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          transition: "background-color 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          (e.target as HTMLButtonElement).style.backgroundColor = "purple";
+        }}
+        onMouseLeave={(e) => {
+          (e.target as HTMLButtonElement).style.backgroundColor = "black";
+        }}
+      >
+        Sign out
+      </button>
+    </main>
+  );}
 
 export default App;
