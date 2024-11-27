@@ -72,28 +72,34 @@ function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-
+  
       devices.forEach((device) => {
         const lastTelemetry = telemetries
           .filter((tel) => tel.device_id === device.device_id)
           .sort((a, b) => b.timestamp - a.timestamp)[0];
-
+  
         if (lastTelemetry) {
           const timeDiff = now - lastTelemetry.timestamp;
-
+  
           const newStatus = timeDiff > 65000 ? "offline" : "online";
-
+  
           if (device.status !== newStatus) {
             client.models.devices.update({
               device_id: device.device_id,
               status: newStatus,
               owner: user.userId,
             });
+            if (newStatus === "offline") {
+              setNotifications((prev) => [
+                ...prev,
+                `Device ${device.device_id} went offline.`,
+              ]);
+            }
           }
         }
       });
     }, 3000);
-
+  
     return () => clearInterval(interval);
   }, [devices, telemetries]);
 
@@ -109,6 +115,8 @@ function App() {
   function deleteTelemetry(device_id: string, timestamp: number) {
     client.models.telemetry.delete({ device_id, timestamp })
   }
+
+  const [notifications, setNotifications] = useState<string[]>([]);
 
   const chartOptions = {
 
@@ -225,6 +233,42 @@ function App() {
       </select>
       
       <Divider padding="xs" />
+
+      <div style={{ position: "fixed", top: "10px", right: "10px", zIndex: 1000 }}>
+      {notifications.map((message, index) => (
+        <div
+          key={index}
+          style={{
+            backgroundColor: "red",
+            color: "white",
+            padding: "10px",
+            marginBottom: "5px",
+            borderRadius: "5px",
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          {message}
+          <button
+            style={{
+              marginLeft: "10px",
+              backgroundColor: "white",
+              color: "red",
+              border: "none",
+              cursor: "pointer",
+              borderRadius: "3px",
+            }}
+            onClick={() => {
+              // Remove the notification
+              setNotifications((prev) =>
+                prev.filter((_, idx) => idx !== index)
+              );
+            }}
+          >
+            Close
+          </button>
+        </div>
+      ))}
+    </div>
       
       <h3>Devices</h3>
       <ThemeProvider theme={customTheme}>
